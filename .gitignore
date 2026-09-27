@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+static/file.jpg
+.idea/
+.ipynb_checkpoints/
+*.h5

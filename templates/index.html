@@ -1,0 +1,29 @@
+{%extends "base.html"%}
+
+{%block content%}
+
+
+<center>
+
+<head>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+<div class="container">
+	<div class="title">	
+        <h2 class='display-4' style="font-family: 'Times New Roman', Times, serif;">Automated Image</h2>
+        <h2 class='display-4' style="font-family: 'Times New Roman', Times, serif;">Captioning</h2>
+    </div>
+    <br><br><br><br>
+
+</div>
+<br><br><br><br><br>
+<br>  
+
+<form action="{{url_for('after')}}" method='POST' enctype='multipart/form-data'>
+    <input type="file" name='file1'>
+<input type="submit" name="btn" value='predict caption' class='btn-btn-warning'> 
+</form>
+</center>
+
+{%endblock%}

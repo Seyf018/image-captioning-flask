@@ -1,0 +1,29 @@
+{%extends "base.html"%}
+    
+{%block content%}
+
+<center>
+	<head>
+		<link rel="stylesheet" href="../static/styles.css">
+	</head>
+	<body>
+		
+	<h2 class='display-4' style="font-family: 'Times New Roman', Times, serif;">Predicted Caption </h3>
+
+	<br>
+	<br>
+	
+<img src="{{url_for('static', filename='file.jpg')}}" alt="image" height=340px>
+
+<br>
+
+<h4 class='text-black' style="font-family: 'Times New Roman', Times, serif;"><br>
+	{{data}}
+</h4>
+
+</body>
+
+
+</center>
+
+{%endblock%}
