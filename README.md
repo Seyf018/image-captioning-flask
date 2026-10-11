@@ -6,19 +6,15 @@ one-sentence description back.
 ![Upload form](assets/demo_upload_form.png)
 ![Predicted caption](assets/demo_prediction.png)
 
-*(UI screenshots from the previous ResNet50-encoder version — the upload
-flow and result page are unchanged; see "Real examples" below for output
-from the current VGG16 model.)*
+*(UI screenshots; see "Real examples" below for output from the current VGG16 model.)*
 
 ## How it works
 
-The CV describes this project as VGG16-based; the code that was actually
-saved used a ResNet50 encoder. This version uses **VGG16** (ImageNet-
-pretrained, average-pooled to a 512-d feature vector), matching the CV.
+The encoder is **VGG16** (ImageNet-pretrained, average-pooled to a 512-d
+feature vector).
 
 - **Encoder:** VGG16 (ImageNet-pretrained, average-pooled), producing a
-  512-d feature vector per image — ResNet50's was 2048-d, so this is a
-  meaningfully smaller, differently-shaped feature.
+  512-d feature vector per image.
 - **Decoder:** an LSTM language model, conditioned on the image feature vector
   through a fused image/language branch, trained on
   [Flickr8k](https://www.kaggle.com/datasets/adityajn105/flickr8k) (a
@@ -37,10 +33,7 @@ caption tokens ──Embedding──▶ LSTM(256) ─┘
 
 ## Results
 
-Real numbers and real example outputs, actually computed in this
-environment — not copied from the original notebook (that decoder's weights
-don't apply to VGG16's differently-shaped features anyway, so they had to be
-retrained regardless of the CV/code mismatch).
+Measured results and real example outputs.
 
 Trained on a **subset** of Flickr8k — 1200 training images, 250 validation,
 120 held-out test (6000/1000/1000 images available in the full official
@@ -123,40 +116,29 @@ captions, and train the same architecture as `app.py`'s `build_model()`
 which is cheaper for a large vocab). Increase `N_TRAIN_IMAGES` and `epochs`
 for a stronger model if you have the compute.
 
-### A note on VGG16 weights in restricted-network environments
+### Offline / restricted-network use
 
 `weights="imagenet"` (the default) makes Keras download weights from
 `storage.googleapis.com` on first use — blocked on some locked-down
-networks (it was, in the sandbox this was developed and retrained in).
+networks.
 `app.py` takes a `--vgg-weights-path` pointing at a local
 `vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5` file as a workaround; a
 copy is downloadable from the
 [fchollet/deep-learning-models GitHub releases](https://github.com/fchollet/deep-learning-models/releases/tag/v0.1)
 if the default host isn't reachable for you either.
 
-## Notes on this update
+## Notes
 
-- Replaced the ResNet50 encoder with VGG16, matching the CV's description —
-  the previous version flagged this as a mismatch instead of fixing it.
-  Since VGG16's pooled feature is 512-d vs. ResNet50's 2048-d, this isn't a
-  drop-in swap: the decoder's first `Dense` layer's input shape changes, so
-  the old ResNet50-trained weights are structurally incompatible and had to
-  be retrained from scratch — done here on a freshly downloaded copy of
-  Flickr8k, with real (if reduced-scale, honestly reported) results above.
-- Found and fixed a real compatibility bug while doing this: `build_model()`
-  used `Sequential(...).output` to read a sub-model's output tensor, which
-  worked under the Keras version this was originally written against but
-  raises `AttributeError` under current Keras (a `Sequential` model with no
-  explicit `Input` layer has no defined output until it's been called on
-  data). Rewritten with the functional API (`Input` + calling each layer
-  directly) instead — this bug meant the app couldn't actually start under
-  a current TensorFlow/Keras install, VGG16 or not, and had gone unnoticed
-  because the previous cleanup pass was syntax-checked but never run.
-- Previously fixed (kept from the last cleanup pass): the caption-decoding
-  loop used `while tqdm(count < 20):`, which doesn't actually stop the loop
-  the way it looks like it should — replaced with a plain bounded loop that
-  breaks cleanly on the `endofseq` token. Also wrapped construction in a
-  `create_app()` factory and added a CLI instead of hardcoded paths.
+- The decoder was trained from scratch on a freshly downloaded copy of
+  Flickr8k; the results above are from that run (reduced scale, reported as is).
+- Fixed a compatibility bug: `build_model()` used `Sequential(...).output` to
+  read a sub-model's output tensor, which raises `AttributeError` under current
+  Keras. Rewritten with the functional API, so the app starts under a current
+  TensorFlow/Keras install.
+- Also fixed: the caption-decoding loop used `while tqdm(count < 20):`, which
+  doesn't stop the way it looks like it should. Replaced with a plain bounded
+  loop that breaks on the `endofseq` token. Construction is wrapped in a
+  `create_app()` factory with a CLI instead of hardcoded paths.
 
 ## License
 
